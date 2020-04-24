@@ -1,0 +1,344 @@
+//jshint esversion: 6
+const mysql = require('mysql');
+const express = require('express');
+const session = require('express-session');
+const bodyParser = require('body-parser');
+const path = require('path');
+
+//insert into customer values
+('jjangjamie', '4321', '123123', 'jamie',
+NULL ,'kim', '95826','3305','sac', 'ca',NULL ,NULL,NULL);
+
+// connection.connect((err) => {
+//   if (err) {
+//     throw err;
+//   }
+//   console.log("Mysql conneceted ...");
+// });
+
+const app = express();
+//want static folder css in even remote
+app.use(express.static("public"));
+app.use(session({
+  secret: 'secret',
+  resave: true,
+  saveUninitialized: true
+}));
+
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+
+app.use(bodyParser.json());
+
+//app.use(express.bodyParser());
+
+app.use(express.urlencoded({
+  extended: true
+}));
+
+app.use(express.json());
+
+
+
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '21737912420Se',
+  database: 'gamelounge'
+});
+
+//crete table worked
+// app.get('/auth', (req, res) => {
+//    let sql = 'CREATE TABLE CUSTOMER (username varchar(50) not null, password varchar(255) not null, CustomerID int not null primary key, FirstName varchar(15) not null, MiddleName varchar(15), LastName varchar(15) not null, Zip varchar(9) not null, Street varchar(50) not null, City varchar(30) not null, State char(2) not null, Hours int, GameID int, BoothID int, constraint CUSTOMER_GAME_fk foreign key  (GameID) references GAME(GameID) on delete set null, constraint CUSTOMER_BOOTH_fk foreign key (BoothID) references BOOTH(BoothID) on delete set null)';
+//    connection.query(sql, (err, result) => {
+//      if (err) throw err;
+//      console.log(result);
+//      res.send('CUSTOMER table created');
+//   });
+// });
+
+
+//after log in
+app.post('/auth', function(request, response) {
+  var username = request.body.username;
+  var password = request.body.password;
+  if (username && password) {
+    connection.query('SELECT * FROM STAFF WHERE username = ? AND password = ?', [username, password], function(error, results, fields) {
+      if (results.length > 0) {
+        request.session.loggedin = true;
+        request.session.username = username;
+        response.redirect('/success');
+      } else {
+        request.session.loggedin = false;
+        response.redirect('/failure');
+      }
+      response.end();
+    });
+  } else {
+    //res.sendFile(__dirname + "/login.html");
+    response.send('Please enter username and password again');
+    response.end();
+  }
+});
+
+
+// delimiter //
+//  CREATE TRIGGER menu_insert_trigger BEFORE INSERT ON MENU_ITEM
+//      for each row
+//      begin
+//          DECLARE isGood BOOLEAN;
+//          -- check participation and disjoint
+//          SET isGood = check_type(new.Itemtype, new.Alcohol, new.Vegan);
+//          IF (!isGood) THEN
+//              signal sqlstate '45000'
+//              SET MESSAGE_TEXT = 'Incorrect attribute values for item type';
+//          end if;
+//      end //
+// delimiter ;
+
+
+// values(12123, 'applepie', '9.99', 2, NULL, NULL, 'F');
+// /*ok*/
+// create table MENU_ITEM
+// (
+// 	ItemID int not null
+// 		primary key,
+// 	Name varchar(15),
+// 	Price decimal (5,2),
+// 	Quantity int,
+// 	Alcohol decimal (4,2),
+// 	Vegan boolean,
+// 	ItemType char(1)
+// );
+
+//insert an item worked
+// app.get('/add', (request, response)=>{
+//   let sql = "insert into MENU_ITEM values(12123, 'applepie', '9.99', 2, NULL, NULL, 'F')";
+//     connection.query(sql, (err, result) => {
+//     if (err) throw err;
+//     console.log("result");
+//     response.send('An item is inserted!');
+//   });
+// });
+
+
+//i want to response with a new page rather than showing a message.
+//response.redirect('/addsuccess');
+//response.redirect('/addfail');
+
+
+// connection.connect((err) => {
+//   if (err) {
+//     throw err;
+//   }
+//   console.log("Mysql conneceted ...");
+// });
+
+
+//insert an item worked
+// app.get('/add', (request, response)=>{
+//   let sql = "insert into MENU_ITEM values(12123, 'applepie', '9.99', 2, NULL, NULL, 'F')";
+//     connection.query(sql, (err, result) => {
+//     if (err) throw err;
+//     console.log("result");
+//     response.send('An item is inserted!');
+//   });
+// });
+
+
+
+// app.post('/add', function(request, response) {
+//
+//
+//  var itemID = request.body.ItemID;
+//  var name = request.body.Name;
+//  var price = request.body.Price;
+//  var quantity = request.body.Quantity;
+//  var alcohol = request.body.Alcohol;
+//  var vegan = request.body.Vegan;
+//  var itemType = request.body.ItemType;
+//  var sql = 'INSERT INTO MENU_ITEM ?';
+//  //INSERT INTO MENU_ITEM SET `ItemID` = '12123', `Name` = 'applepie', `Price` = '2.99', `Quantity` = '2', `Alcohol` = 'NULL', `Vegan` = 'NULL', `ItemType` = 'F'
+//  var post = {ItemID: itemID, Name: name, Price: price, Quantity: quantity, Alcohol: alcohol, Vegan:vegan, ItemType: itemType};
+//   connection.query(sql, post, function(err, result) {
+//     if (err) throw err;
+//        console.log("result");
+//        response.send("item inserted.");
+//      });
+//    });
+
+//escaping query values avoid qsl injection attack.
+// app.post('/add', function(request, response) {
+//   var itemID = request.body.ItemID;
+//   var name = request.body.Name;
+//   var price = request.body.Price;
+//   var quantity = request.body.Quantity;
+//   var alcohol = request.body.Alcohol;
+//   var vegan = request.body.Vegan;
+//   var itemType = request.body.ItemType;
+//   //(ItemID, Name, Price,Quantity, Alcohol, Vegan, ItemType)
+//   var sql = "INSERT INTO MUNU_ITEM VALUES ?";
+//   var items = (itemID, name.toString(), price.toString(), quantity, alcohol, vegan, itemType.toString());
+//   //var sql = "INSERT INTO MENU_ITEM (ItemID, Name, Price,Quantity, Alcohol, Vegan, ItemType) VALUES ("itemID",'"+name+"','"+price+"' "quantity","alcohol","vegan",'"+itemType+"')";
+//   connection.query(sql, items, function(error, results) {
+//     if (error) {
+//       throw error;
+//     }else{
+//
+//     console.log("item added.");
+//   }
+//   });
+// });
+
+
+//after menuitem page
+app.post('/add', function(request, response) {
+
+  var itemID = request.body.ItemID;
+  var name = request.body.Name;
+  var price = request.body.Price;
+  var quantity = request.body.Quantity;
+  var alcohol = request.body.Alcohol;
+  var vegan = request.body.Vegan;
+  var itemType = request.body.ItemType;
+
+  console.log(itemID,name,price,quantity,alcohol,vegan,itemType);
+  var sql = `INSERT INTO MENU_ITEM (ItemID, Name, Price,Quantity, Alcohol, Vegan, ItemType) VALUES (itemID, name, price, quantity, alcohol, vegan, itemType)`
+
+    connection.query(sql, function (err, result) {
+         if (err){
+           throw err;
+         }else{
+          console.log("1 item added. ");
+         }
+      });
+ });
+
+
+//create db
+// app.get("/login", function(req, res) {
+//
+//   let sql = 'CREATE DATABASE gamelounge';
+//   connection.query(sql, (err, result) => {
+//     if (err) throw err;
+//     console.log(result);
+//     res.send('Databased gamelounge created');
+//   res.sendFile(__dirname + "/login.html");
+//
+// });
+// });
+
+app.get("/", function(req, res) {
+  res.sendFile(__dirname + "/login.html");
+});
+
+app.get('/success', function(req, res) {
+  res.sendFile(__dirname + "/success.html");
+});
+
+app.get('/failure', function(req, res) {
+  res.sendFile(__dirname + "/failure.html");
+});
+
+app.get('/mygamelounge', function(req, res) {
+  res.sendFile(__dirname + "/mygamelounge.html");
+});
+
+app.get('/menuitem', function(req, res) {
+  res.sendFile(__dirname + "/menuitem.html");
+});
+
+
+app.get('/addsuccess', function(request, response) {
+  response.sendFile(__dirname + "/addsuccess.html");
+});
+app.get('/addfail', function(request, response) {
+  response.sendFile(__dirname + "/addfail.html");
+});
+app.get('/updatesuccess', function(request, response) {
+  response.sendFile(__dirname + "/updatesuccess.html");
+});
+app.get('/updatefail', function(request, response) {
+  response.sendFile(__dirname + "/updatefail.html");
+});
+app.get('/deltesuccess', function(request, response) {
+  response.sendFile(__dirname + "/deltesuccess.html");
+});
+app.get('/deletefail', function(request, response) {
+  response.sendFile(__dirname + "/deletefail.html");
+});
+
+
+
+
+// app.get('/home', function(request, response) {
+// 	if (request.session.loggedin) {
+// 		response.send('Welcome back, ' + request.session.username + '!');
+// 	} else {
+// 		response.send('Staff Only!');
+// 	}
+// 	response.end();
+// });
+
+//click button in success.html then go to mygamelounge
+app.post("/success", function(request, response) {
+  response.redirect("/mygamelounge");
+})
+
+//click tryagain button in failure then go to /
+app.post("/failure", function(request, response) {
+  response.redirect("/");
+})
+
+//click menu item button in mygamelounge then go to menuitem.
+app.post("/mygamelounge", function(request, response) {
+  response.redirect("/menuitem");
+})
+
+/* now filleld up and pushed add itme button.
+trying to add item  */
+// app.post("/menuitem", function(req, res){
+//   res.redirect("/add");
+// })
+
+/*trying to update an item */
+//click add item button in menuitem then go to
+//addsucess or addfail.
+// app.post("/menuitem2", function(request, response) {
+//   response.redirect("");
+// })
+
+// app.post("/menuitem2", function(request, response) {
+//   response.redirect("");
+// })
+//
+// /* trying to delete an itm */
+// app.post("/menuitem3", function(request, response) {
+//   response.redirect("/delete");
+// })
+
+
+app.post("/addfail", function(request, response) {
+  response.redirect("/menuitem");
+})
+app.post("/updatefail", function(request, response) {
+  response.redirect("/menuitem");
+})
+app.post("/deletefail", function(request, response) {
+  response.redirect("/menuitem");
+})
+
+
+
+app.listen(process.env.PORT || 3000, function() {
+  console.log("Server is running on port 3000. ");
+});
+
+
+
+//api id
+//f7bf6d5cc26f1f691ce98dd19519e184-us19
+
+//list id
+//3fc253fa9c

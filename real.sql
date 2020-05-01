@@ -1,21 +1,63 @@
+/*ok*/
+create table STAFF
+(
+  username varchar(50) not null,
+  password varchar(255) not null,
+	StaffID int not null
+primary key,
+	FirstName varchar(15) not null,
+	MiddleName varchar(15),
+	LastName varchar(15) not null,
+	Ssn int not null,
+	SuperVisorID int,
+	PayRate Decimal (4,2) not null,
+	Tips Decimal (5,2),
+	Bonus Decimal (5,2),
+	StaffType Char(1),
+    constraint STAFF_SUPERVISOR_fk
+		foreign key (SuperVisorID) references STAFF(StaffID)
+			on delete set null
+);
+
+
+
+create table GAME
+(
+	GameID varchar(30) not null
+		primary key,
+	PlayerNum int,
+	BoardName varchar(30),
+	ConsoleType varchar(30),
+	ControllerAmnt int,
+	ComputerNum int,
+	GameType char(1)
+);
+
+create table BOOTH
+(
+	BoothID varchar(30) not null
+		primary key,
+	Floor int not null,
+	Seats int not null,
+	Availability boolean not null
+);
 
 /*ok*/
 CREATE TABLE CUSTOMER
 (
   username varchar(50) not null,
-  password varchar(255) not null,
-	CustomerID int not null
-		primary key,
-	FirstName varchar(15) not null,
+  password varchar(50) not null,
+	CustomerID int not null primary key,
+	FirstName varchar(15) ,
 	MiddleName varchar(15),
-	LastName varchar(15) not null,
-	Zip varchar(9) not null,
-	Street varchar(50) not null,
-	City varchar(30) not null,
-	State char(2) not null,
+	LastName varchar(15),
+	Zip varchar(9),
+	Street varchar(50),
+	City varchar(30),
+	State char(2),
 	Hours int,
-	GameID int,
-	BoothID int,
+	GameID varchar(30),
+	BoothID varchar(30),
     constraint CUSTOMER_GAME_fk
 		foreign key  (GameID) references GAME(GameID)
 			on delete set null,
@@ -23,10 +65,12 @@ CREATE TABLE CUSTOMER
 		foreign key (BoothID) references BOOTH(BoothID)
 			on delete set null
 );
+
+
 /*ok*/
 create table MEMBER
 (
-	MCustomerID int not null,
+	MCustomerID int not null ,
 	Points int,
 	MembershipType varchar(8),
     constraint MEMBER_uk
@@ -38,10 +82,56 @@ create table MEMBER
 
 
 /*ok*/
+create table CUSTOMER_ORDER
+(
+	OCustomerID int not null ,
+	OrderNum int not null,
+	Cost decimal(3,2),
+	Payment varchar(30),
+	constraint CUSTOMER_ORDER_pk
+		primary key(OCustomerID),
+	constraint CUSTOMER_ORDER_CUSTID_fk
+		foreign key (OCustomerID) references CUSTOMER(CustomerID)
+			on delete cascade
+);
+
+/*ok*/
+create table MENU_ITEM
+(
+	ItemID int not null
+		primary key,
+	Name varchar(55),
+	Price decimal (4,2),
+	Quantity int,
+	Alcohol decimal (3,2),
+	Vegan varchar(1),
+	ItemType char(1)
+);
+
+/*ok*/
+create table ORDER_CONTENTS
+(
+	CustomerID int not null ,
+    OrderNum int not null,
+    ItemID int not null,
+    constraint ORDER_CONTENTS_pk
+		primary key(CustomerID, OrderNum, ITemID),
+	constraint ORDER_CONTENTS_CUSTOMER_fk
+		foreign key (CustomerID) references CUSTOMER_ORDER(OCustomerID)
+			on delete cascade,
+	constraint ORDER_CONTENTS_MENU_ITEM_fk
+		foreign key (ItemID) references MENU_ITEM(ItemID)
+);
+
+
+
+/*ok*/
 create table MEMBERS_VIEW
 (
+  username varchar(50) not null,
+  password varchar(255) not null,
 	CustomerID int not null
-		primary key,
+		primary key AUTO_INCREMENT,
 	FirstName varchar(15) not null,
 	MiddleName varchar(15),
 	LastName varchar(15) not null,
@@ -54,11 +144,41 @@ create table MEMBERS_VIEW
 	BoothID int,
 	Points int,
 	MembershipType varchar(8),
-    constraint MEMBER_VIEW_pk
+    constraint MEMBER_VIEW_fk
 		foreign key(CustomerID) references CUSTOMER(CustomerID)
 );
 
+/* update CUSTOMER !!
+if 123123(updat new.CustomerID) in MEMBER
+then Points(20000), MembershiptType(SILVER) FROM MEMBER = new Points, new MembershipType
+INSERT THEM MEMEBRS_VIEW
+*/
 
+/*ok*/
+create table DRINKS_MENU_VIEW
+(
+	ItemID int not null
+		primary key,
+	Name varchar(15),
+	Price decimal (4,2),
+	Quantity int,
+	Alcohol decimal (3,2),
+	constraint DRINKS_MENU_fk
+		foreign key(ItemID) references MENU_ITEM(ItemID)
+);
+
+/*ok*/
+create table FOOD_MENU_VIEW
+(
+	ItemID int not null
+		primary key,
+	Name varchar(15),
+	Price decimal(4,2),
+	Quantity int,
+	vegan varchar(1),
+    constraint FOOD_MENU_fk
+		foreign key(ItemID) references MENU_ITEM(ItemID)
+);
 /*ok*/
 delimiter //
 CREATE TRIGGER customer_update_trigger AFTER UPDATE on gamelounge.CUSTOMER
@@ -79,16 +199,16 @@ CREATE TRIGGER customer_update_trigger AFTER UPDATE on gamelounge.CUSTOMER
             INSERT INTO MEMBERS_VIEW values (new.username, new.password, new.CustomerID, new.FirstName, new.MiddleName, new.LastName, new.Zip, new.Street, new.City, new.State,
                                               new.Hours, new.GameID, new.BoothID, newPoints, newMembershipType);
         end if;
+
     end //
-
-
+  delimiter ;
 
 
 /*function*/
 
-/*ok added else*/
+/**/
  delimiter //
- CREATE FUNCTION check_type (Itemtype CHAR, Alcohol DECIMAL(4,2), Vegan BOOLEAN) RETURNS BOOLEAN
+ CREATE FUNCTION check_type (Itemtype CHAR, Alcohol DECIMAL(3,2), Vegan VARCHAR) RETURNS BOOLEAN
      BEGIN
          DECLARE isGood BOOLEAN default FALSE;
          CASE (Itemtype)
@@ -102,7 +222,7 @@ CREATE TRIGGER customer_update_trigger AFTER UPDATE on gamelounge.CUSTOMER
      end //
   delimiter ;
 
-/*ok*/
+/**/
 /* if ItemType is wrong then error messages: inccorct attribute for type.*/
   delimiter //
    CREATE TRIGGER menu_insert_trigger BEFORE INSERT ON gamelounge.MENU_ITEM
@@ -137,7 +257,7 @@ CREATE TRIGGER customer_update_trigger AFTER UPDATE on gamelounge.CUSTOMER
 
 
 
-/* ok before update */
+/* */
 /* if ItemType is wrong then error messages: inccorct attribute for type.*/
   delimiter //
   CREATE TRIGGER menu_item_update_trigger BEFORE UPDATE ON gamelounge.MENU_ITEM
@@ -149,14 +269,14 @@ CREATE TRIGGER customer_update_trigger AFTER UPDATE on gamelounge.CUSTOMER
 
           IF (!isGood) THEN
               signal sqlstate '45000'
-              SET MESSAGE_TEXT = 'Incorrect attribute values for item type';
+              SET MESSAGE_TEXT = 'Incorrect attribute values for item type.';
               END IF;
 
       end //
  delimiter ;
 
 
-/* ok after update*/
+/**/
  delimiter //
   CREATE TRIGGER menu_item_updateafter_trigger AFTER UPDATE ON gamelounge.MENU_ITEM
       for each row
@@ -183,7 +303,7 @@ CREATE TRIGGER customer_update_trigger AFTER UPDATE on gamelounge.CUSTOMER
  delimiter ;
 
 
-/*ok before delete*/
+/*ok*/
  delimiter //
   CREATE TRIGGER menu_item_delete_trigger BEFORE DELETE ON gamelounge.MENU_ITEM
       for each row
@@ -199,129 +319,55 @@ CREATE TRIGGER customer_update_trigger AFTER UPDATE on gamelounge.CUSTOMER
       end //
  delimiter ;
 
-/*****view *****/
-/*ok*/
-create table DRINKS_MENU_VIEW
-(
-	ItemID int not null
-		primary key,
-	Name varchar(15),
-	Price decimal (5,2),
-	Quantity int,
-	Alcohol decimal (4,2),
-	constraint DRINKS_MENU_fk
-		foreign key(ItemID) references MENU_ITEM(ItemID)
-);
 
 
-
-/*insert ok */
+/**/
+/*insert BEFORE and AFTERok */
 insert into MENU_ITEM
 values(12123, 'applepie', '9.99', 2, NULL, NULL, 'F');
-/*update ok*/
-update MENU_ITEM
-set Price = '8.99'
-where ItemID = 12123;
-/*delete ok */
-DELETE FROM MENU_ITEM
-where ItemID = 12123;
-
-
-/*trigger*/
 insert into MENU_ITEM
-values(12124, 'Vegancheesecake', '9.99', 3, NULL, yes, 'F');
+values(12124, 'VeganCheesecake', '5.99', 3, NULL, NULL, 'F');
 /*insert OK. in DRINK_VIEW_ITEM SINCE IT IS D*/
 insert into MENU_ITEM
-values(12125, 'ipa', '9.89', 4, '0.07', NULL, 'D');
+values(12125, 'Ipa(12oz)', '7.99', 4, '0.07', NULL, 'D');
+
+/*triggered*/
+insert into MENU_ITEM
+values(123123, 'Bluberry Muffin', '9.89', 4, NULL, NULL, 'W');
+
 /*trigger*/
 insert into MENU_ITEM
-values(12126, 'sparkingbunny', '9.89', 5, '0.10', NULL, 'D');
+values(12126, 'Sparking Bunny', '15.99', 5, '0.10', NULL, 'D');
 
 insert into MENU_ITEM
-values(12127, 'hanarasberry', '9.99', 1, '0.08', '34.23', NULL, 'D');
+values(12127, 'hanarasberry', '17.99', 1, '0.08', NULL, 'D');
 
 
+/*UPDATE BEFORE and AFTER OK*/
+update MENU_ITEM
+set Price = '4.99'
+where ItemID = 123123;
 
-/*ok*/
-create table FOOD_MENU_VIEW
-(
-	ItemID int not null
-		primary key,
-	Name varchar(15),
-	Price decimal(5,2),
-	Quantity int,
-	vegan boolean,
-    constraint FOOD_MENU_fk
-		foreign key(ItemID) references MENU_ITEM(ItemID)
-);
+/*delete ok */
+DELETE FROM MENU_ITEM
+where ItemID = 10000;
 
 
+insert into MENU_ITEM
+values(10000, 'TEST', '9.89', 4, NULL, NULL, 'F');
 
-/*ok*/
-create table GAME
-(
-	GameID int not null
-		primary key,
-	PlayerNum int,
-	BoardName varchar(30),
-	ConsoleType varchar(30),
-	ControllerAmnt int,
-	ComputerNum int,
-	GameType char(1)
-);
+update MENU_ITEM
+set Vegan = 'V'
+where ItemID=12123;
 
-/*ok*/
-create table STAFF
-(
-  username varchar(50) not null,
-  password varchar(255) not null,
-	StaffID int not null
-primary key,
-	FirstName varchar(15) not null,
-	MiddleName varchar(15),
-	LastName varchar(15) not null,
-	Ssn int not null,
-	SuperVisorID int,
-	PayRate Decimal (4,2) not null,
-	Tips Decimal (5,2),
-	Bonus Decimal (5,2),
-	StaffType Char(1),
-    constraint STAFF_SUPERVISOR_fk
-		foreign key (SuperVisorID) references STAFF(StaffID)
-			on delete set null
-);
 
-/*ok*/
-create table STAFF_PHONE
-(
-	PStaffID int not null,
-	PhoneNum varchar(15) not null,
-    constraint STAFF_PHONE_pk
-		primary key (PStaffID, PhoneNum),
-	constraint STAFF_PHONE_fk
-		foreign key (PStaffID) references STAFF(StaffID)
-		on delete cascade
-);
-
-/*ok*/
-create table MENU_ITEM
-(
-	ItemID int not null
-		primary key,
-	Name varchar(15),
-	Price decimal (5,2),
-	Quantity int,
-	Alcohol decimal (4,2),
-	Vegan boolean,
-	ItemType char(1)
-);
-
-/*ok*/
-create table BOOTH
-(
-	BoothID int not null
-		primary key,
-	Floor int not null,
-	Seats int not null,
-	Availability boolean not null
-);
+insert into MENU_ITEM
+values(23234, 'Test Value1', '9.99', 43, NULL, NULL, 'F');
+insert into MENU_ITEM
+values(23432, 'Test Value2', '9.99', 53, NULL, NULL, 'M');
+insert into MENU_ITEM
+values(233452, 'Test Value3', '9.89', 45, '98.23', '23.53', 'M');
+insert into MENU_ITEM
+values(234672, 'Test Value4', '9.89', 45, NULL, NULL, 'W');
+insert into MENU_ITEM
+values(287632, 'Test Value5', '9.99', 45, '45.34', '34.23', 'W');

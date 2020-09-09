@@ -7,8 +7,8 @@ User interface includes registration and browse update userid/passwordcapabiliti
 Achieved highest score (395/400) among all teams 👍🏼
 
 # Link 
-deployed in http://157.245.231.158/ using Digital Ocean 
-website currently not available 
+Deployed in http://157.245.231.158/ using Digital Ocean. 
+Website currently not available. 
 
 # Error Handling 
 Learned how to handle a lot of little bobby issues. Update, Insert, are all different syntaxes. MySql 5.7/8.0 and Nodejs authentication error when deploying. Data types matter. Using phpmyadmin was helpful rather than using command line alone. 
